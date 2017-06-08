@@ -6,7 +6,7 @@
 #define ENIGMA_PARTS
 
 #define ALPH_LENGTH 26	//length of alphabet of each rotor
-#define WORD_COUNT 10		//Number of words plugged by wires 
+#define WORD_COUNT 20		//Number of words plugged by wires 
 							//(number of wires * 2)
 #define PART_COUNT 3		//Number of rotors
 
@@ -29,6 +29,8 @@
 //Following Not used in WWII too much
 #define UKW_A     "EJMZALYXVBWFCRQUONTSPIKHGD"
 #define UKW_C     "FVPJIAOYEDRZXWGCTKUQSBNMHL"
+
+#define DEBUG 1
 
 #endif
 

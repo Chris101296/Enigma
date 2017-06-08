@@ -23,7 +23,7 @@ typedef struct __attribute__((packed)) part_t {
 	uint8_t turnPoint;	//Point at which the rotor turns the left rotor
 						//Unused by Slow Rotor and Reflector
 						//Should match alph used
-	char alph [ALPH_LENGTH];  //alphabet used by piece, defined in parts.h
+	char alph [ALPH_LENGTH + 1];  //alphabet used by piece, defined in parts.h
 } part;
 
 
@@ -41,8 +41,8 @@ typedef struct __attribute__((packed)) part_t {
 	the midChange boolean is used to see if
 */
 typedef struct __attribute__((packed)) enigma_t {
-	char wiring [WORD_COUNT];	//letters to swap at beginning and end	
-	char reflector [ALPH_LENGTH]; //alphabet of reflector
+	char wiring [WORD_COUNT + 1];	//letters to swap at beginning and end	
+	char reflector [ALPH_LENGTH + 1]; //alphabet of reflector
 	part parts [PART_COUNT];	//current position of rotor (or 26 for reflector)
 } enigma;
 
@@ -90,64 +90,89 @@ char encrypt(enigma* enig, char c) {
 	
 	//Fast Rotor
 	c -= 'A'; 						//Converts char to rotor notation (0 - 25)
-	uint8_t index = (c + enig->parts[2].set) % 26; //index of letter to swap
+	uint8_t index = (c + enig->parts[2].set) % ALPH_LENGTH; //index of letter to swap
 	c =  enig->parts[2].alph[(uint8_t)c] - 'A'; //get final result of swap
+	#ifdef DEBUG
+		printf("%d ", c);
+	#endif
 	
 	//Rest of Rotors
 	for(int i = PART_COUNT - 1; i > -1; i--) {
-		index = (c + enig->parts[i].set - enig->parts[i - 1].set) % 26;
-		index = (index + 26) % 26;
+		index = (c + enig->parts[i].set - enig->parts[i - 1].set) % ALPH_LENGTH;
+		index = (index + ALPH_LENGTH) % ALPH_LENGTH;
 		c = enig->parts[i].alph[index] - 'A'; //get final result of swap
+		#ifdef DEBUG
+			printf("%d ", c);
+		#endif
 	}
 	
 	//Reflector Part
-	index = ( (c - enig->parts[0].set) % 26 + 26) % 26;
+	index = ( (c - enig->parts[0].set) % ALPH_LENGTH + ALPH_LENGTH) % ALPH_LENGTH;
 	c = enig->reflector[index] - 'A';
+    #ifdef DEBUG
+		printf("%d ", c);
+	#endif
 	
 	//reverse
-	c = (c + enig->parts[0].set) % 26 + 'A';
-	c = stchr(enig->parts[0].alph, c) - &enig->parts[0];
+	c = (c + enig->parts[0].set) % ALPH_LENGTH + 'A';
+	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0];
+    #ifdef DEBUG
+		printf("%d ", c);
+	#endif
 
-	for(int i = 1; i < PARTS_COUNT; i++) {
-		c = (c + enig->parts[i].set - enig->parts[i - 1]. set) % 26;
-		c = ((c + 26) % 26 + 26) % 26 + 'A';
-		c = stchr(enig->parts[0].alph, c) - &enig->parts[i];
+	for(int i = 1; i < PART_COUNT; i++) {
+		c = (c + enig->parts[i].set - enig->parts[i - 1]. set) % ALPH_LENGTH;
+		c = ((c + ALPH_LENGTH) % ALPH_LENGTH + ALPH_LENGTH) % ALPH_LENGTH + 'A';
+		c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[i];
+	    #ifdef DEBUG
+			printf("%d ", c);
+		#endif
 	}	 
 
-	c = ((c - set) % 26 + 26) % 26 + 'A';
+	c = ((c - enig->parts[2].set) % ALPH_LENGTH + ALPH_LENGTH) % ALPH_LENGTH + 'A';
 	c = wireSwap(enig, c);
+    #ifdef DEBUG
+		printf("%c\n", c);
+	#endif
 	return c;
 }
 
-
 //TEST
 int main() {
-	*enigma enig;
+	printf("%d %d\n", sizeof(char), sizeof(uint8_t) );
+	enigma* enig = malloc(sizeof(enigma));
 	const char wires[ALPH_LENGTH]= "AAAAAAAAAAAAAAAAAAAA";
-	memcopy(enig->wiring, wires, ALPH_LENGTH); 
+	memmove(enig->wiring, wires, ALPH_LENGTH); 
 	
 	const char r[ALPH_LENGTH] = UKW_B;
-	memcopy(enig->reflector, r, ALPH_LENGTH);
+	memmove(enig->reflector, r, ALPH_LENGTH);
 
 	const char r1 [ALPH_LENGTH] = ROTOR_I;
 	const char r2 [ALPH_LENGTH] = ROTOR_II;
 	const char r3 [ALPH_LENGTH] = ROTOR_III;
 	
-	memcopy(enig->parts[2].alph, r1, ALPH_LENGTH);
+	memmove(enig->parts[2].alph, r1, ALPH_LENGTH);
 	enig->parts[2].set = 16;
 	enig->parts[2].turnPoint = TURN_I;
 
-	memcopy(enig->parts[1].alph, r2, ALPH_LENGTH);
+	memmove(enig->parts[1].alph, r2, ALPH_LENGTH);
 	enig->parts[1].set = 21;
 	enig->parts[1].turnPoint = TURN_II;
 
-	memcopy(enig->parts[0].alph, r3, ALPH_LENGTH);
+	memmove(enig->parts[0].alph, r3, ALPH_LENGTH);
 	enig->parts[0].set = 5;
 	enig->parts[0].turnPoint = TURN_III;
 
-	char mssg [87] = "El que guarda su boca guarda su alma\n mas el que mucho abre sus labios tendra calamidad."
+	printf("*******\n");
+	for(int i = PART_COUNT - 1; i >= 0; i--) {
+		printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].set, enig->parts[i].turnPoint );
+	}
+	printf("UKW: %s\nWIRING%s\n", enig->reflector, enig->wiring);
+	printf("*******\n");
+
+	char mssg [88] = "El que";// guarda su boca guarda su alma\n mas el que mucho abre sus labios tendra calamidad.";
 	for(int i = 0; i < 87; i++) {
-		mssg[i] = encrypt(enig, mssg[i])
+		mssg[i] = encrypt(enig, mssg[i]);
 	}
 	
 	printf("%s\n", mssg);
