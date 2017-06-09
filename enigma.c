@@ -85,21 +85,26 @@ char encrypt(enigma* enig, char c) {
 	}
 	stepMachine(enig);
 
+	#ifdef DEBUG
+		printf("%d|%d|%d\n",enig->parts[0].set, 
+						   enig->parts[1].set, 
+						   enig->parts[2].set);
+	#endif
+
 	//Begin Encryption
 	c = wireSwap(enig, c);
 	
 	//Fast Rotor
 	c -= 'A'; 						//Converts char to rotor notation (0 - 25)
 	uint8_t index = (c + enig->parts[2].set) % ALPH_LENGTH; //index of letter to swap
-	c =  enig->parts[2].alph[(uint8_t)c] - 'A'; //get final result of swap
+	c =  enig->parts[2].alph[index] - 'A'; //get final result of swap
 	#ifdef DEBUG
 		printf("%d ", c);
 	#endif
 	
 	//Rest of Rotors
-	for(int i = PART_COUNT - 1; i > -1; i--) {
-		index = (c + enig->parts[i].set - enig->parts[i - 1].set) % ALPH_LENGTH;
-		index = (index + ALPH_LENGTH) % ALPH_LENGTH;
+	for(int i = PART_COUNT - 2; i > -1; i--) {
+		index = (c + enig->parts[i].set - enig->parts[i + 1].set + ALPH_LENGTH) % ALPH_LENGTH;
 		c = enig->parts[i].alph[index] - 'A'; //get final result of swap
 		#ifdef DEBUG
 			printf("%d ", c);
@@ -107,29 +112,30 @@ char encrypt(enigma* enig, char c) {
 	}
 	
 	//Reflector Part
-	index = ( (c - enig->parts[0].set) % ALPH_LENGTH + ALPH_LENGTH) % ALPH_LENGTH;
+	index = (c - enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH;
 	c = enig->reflector[index] - 'A';
     #ifdef DEBUG
 		printf("%d ", c);
 	#endif
 	
-	//reverse
+	//Reverse
 	c = (c + enig->parts[0].set) % ALPH_LENGTH + 'A';
-	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0];
+	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0].alph;
     #ifdef DEBUG
 		printf("%d ", c);
 	#endif
 
 	for(int i = 1; i < PART_COUNT; i++) {
-		c = (c + enig->parts[i].set - enig->parts[i - 1]. set) % ALPH_LENGTH;
-		c = ((c + ALPH_LENGTH) % ALPH_LENGTH + ALPH_LENGTH) % ALPH_LENGTH + 'A';
-		c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[i];
+		c = (c + enig->parts[i].set - enig->parts[i - 1]. set + ALPH_LENGTH) % ALPH_LENGTH;
+		c = c + 'A';
+		c = strchr(enig->parts[i].alph, c) - (char*)&enig->parts[i].alph;
 	    #ifdef DEBUG
 			printf("%d ", c);
 		#endif
 	}	 
 
-	c = ((c - enig->parts[2].set) % ALPH_LENGTH + ALPH_LENGTH) % ALPH_LENGTH + 'A';
+	//Ready for Wire Board	
+	c = (c - enig->parts[2].set + ALPH_LENGTH) % ALPH_LENGTH +'A';
 	c = wireSwap(enig, c);
     #ifdef DEBUG
 		printf("%c\n", c);
@@ -170,7 +176,7 @@ int main() {
 	printf("UKW: %s\nWIRING%s\n", enig->reflector, enig->wiring);
 	printf("*******\n");
 
-	char mssg [88] = "El que";// guarda su boca guarda su alma\n mas el que mucho abre sus labios tendra calamidad.";
+	char mssg [88] = "El que guarda su boca guarda su alma\nmas el que mucho abre sus labios tendra calamidad.";
 	for(int i = 0; i < 87; i++) {
 		mssg[i] = encrypt(enig, mssg[i]);
 	}
