@@ -16,19 +16,26 @@ void loadSettings(enigma *e);
 
 
 int main() {
-	//enigma* enig = malloc(sizeof(enigma));
-	//loadSettings(enig);
+	enigma* enig = malloc(sizeof(enigma));
+	loadSettings(enig);
 
 	printf("________\n| ENIGMA |\n________\n\n");
 	//printf("[A]%20s\n[B]%20s\n[C]%20s\n");
-	generateFile();
+	
 	return 0;
 }
 
+/** *Obtains the settings from EXISTING, PROPPERLY FORMATTED
+	*enigma.enig file and initializes enigma structure pointed 
+	*to by enig **/
 void loadSettings(enigma* enig) {
-	//Create default file if it does not exist	
-	if(access("Files/enigma.enig", F_OK) == -1) {
-		generateFile();	
+	//Creates default file if it does not exist	
+	if(access("enigma.enig", F_OK) == -1) {
+		FILE *conf = fopen(CONF, "w");	
+		fprintf(conf, "%s\n%s\n%d\n%d\n%s\n%d\n%d\n%s\n%d\n%d\n%s\n",
+			    "QWERTYUIOPASDFGHJKLZ", UKW_B,
+				5, 21, ROTOR_III, 21, 4, ROTOR_II, 16, 16, ROTOR_I);
+		fclose(conf);	
 	}	
 	
 	FILE *conf = fopen(CONF, "r");
@@ -40,11 +47,5 @@ void loadSettings(enigma* enig) {
 			&enig->parts[2].set, &enig->parts[2].turnPoint,&enig->parts[2].alph[0]);	
 	fclose(conf);
 }
-/*Automatically generates a enigma.eng file using a default setting*/
-void generateFile() {
-	FILE *conf = fopen(CONF, "w");	
-	fprintf(conf, "%s\n%s\n%d\n%d\n%s\n%d\n%d\n%s\n%d\n%d\n%s\n","QWERTYUIOPASDFGHJKLZ", UKW_B,
-				5, 21, ROTOR_III, 21, 4, ROTOR_II, 16, 16, ROTOR_I);
-	fclose(conf);
+
 	
-}
