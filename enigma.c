@@ -12,40 +12,6 @@
 #define STEP(step) ((step + 1) % ALPH_LENGTH )
 #define CASE_GAP  32	// Equivilant to 'a' - 'A' 
 
-
-/* Struct for both the rotors and reflector of an Enigma machine.
-   Contains set, a number from 0 to 25 representing the current position of 
-   the rotor as well as letter, the "alphabet" used by this piece. 
-   The reflector will be assigned
-*/   
-typedef struct __attribute__((packed)) part_t {
-	uint8_t set;	//current position of rotor (or 26 for reflector)
-	uint8_t turnPoint;	//Point at which the rotor turns the left rotor
-						//Unused by Slow Rotor and Reflector
-						//Should match alph used
-	char alph [ALPH_LENGTH + 1];  //alphabet used by piece, defined in parts.h
-} part;
-
-
-/*	Struct for the circuit, main component, of the Enigma Machine.
-	Contains a 4 element array of parts with the follwing defintions
-	[3] Fast Rotor
-	[2] Middle Rotor (Can Double step)
-	[1] Slow Rotor
-	[0] Reflector set is 26 for sanity check
-
-	wiring represents the wire board of the machine with each
-	evenly indexed char being connected to the oddly indexed 
-	char to the right. All characters must be different and between A and Z.  
-
-	the midChange boolean is used to see if
-*/
-typedef struct __attribute__((packed)) enigma_t {
-	char wiring [WORD_COUNT + 1];	//letters to swap at beginning and end	
-	char reflector [ALPH_LENGTH + 1]; //alphabet of reflector
-	part parts [PART_COUNT];	//current position of rotor (or 26 for reflector)
-} enigma;
-
 /*Steps through entire machine
 */
 void stepMachine(enigma* enig) {
