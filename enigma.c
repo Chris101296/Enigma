@@ -9,8 +9,7 @@
 #include "parts.h"
 
 /*Function for normal stepping on the Enigma Machine*/
-#define STEP(step) ((step + 1) % ALPH_LENGTH )
-#define CASE_GAP  32	// Equivilant to 'a' - 'A' 
+#define STEP(step) ((step + 1) % ALPH_LENGTH ) 
 
 /*Steps through entire machine
 */
@@ -42,7 +41,7 @@ char wireSwap(enigma* enig, char c) {
 
 /** Encrypts a single character using the Enigma machine
 	enig is a pointer to the enigma structure in use**/
-char encrypt(enigma* enig, char c) {	
+extern char encrypt(enigma* enig, char c) {	
 	if(c > 'Z' || c < 'A') {
 		if(c >= 'a' && c <= 'z')
 			return encrypt(enig, c - CASE_GAP);
@@ -109,29 +108,59 @@ char encrypt(enigma* enig, char c) {
 	return c;
 }
 
+//Given, string rotor is one of the 5 rotors, sec is between 0 and 2 incluseve
+extern void chooseRotor(enigma* enig, char* rotor, uint8_t sec) {
+	if(strcmp(rotor, "I\n") == 0) {
+		strncpy(enig->parts[sec].alph, ROTOR_I, ALPH_LENGTH + 1);
+		enig->parts[sec].turnPoint = TURN_I;	
+	}
+	
+	else if(strcmp(rotor, "II\n") == 0) {
+		strncpy(enig->parts[sec].alph, ROTOR_II, ALPH_LENGTH + 1);
+		enig->parts[sec].turnPoint = TURN_II;	
+	}
+
+	else if(strcmp(rotor, "III\n") == 0) {
+		strncpy(enig->parts[sec].alph, ROTOR_III, ALPH_LENGTH + 1);
+		enig->parts[sec].turnPoint = TURN_III;	
+	}
+
+	else if(strcmp(rotor, "IV\n") == 0) {
+		strncpy(enig->parts[sec].alph, ROTOR_IV, ALPH_LENGTH + 1);
+		enig->parts[sec].turnPoint = TURN_IV;	
+	}
+
+	else if(strcmp(rotor, "V\n") == 0) {
+		strncpy(enig->parts[sec].alph, ROTOR_V, ALPH_LENGTH + 1);
+		enig->parts[sec].turnPoint = TURN_V;	
+	}
+}
+
+
 //TEST
+/*
 int main() {
 	printf("%d %d\n", sizeof(char), sizeof(uint8_t) );
 	enigma* enig = malloc(sizeof(enigma));
-	const char wires[ALPH_LENGTH]= "AAAAAAAAAAAAAAAAAAAA";
-	memmove(enig->wiring, wires, ALPH_LENGTH); 
+	const char wires[ALPH_LENGTH + 1]= "AAAAAAAAAAAAAAAAAAAA";
+	strncpy(enig->wiring, wires, ALPH_LENGTH + 1); 
 	
-	const char r[ALPH_LENGTH] = UKW_B;
-	memmove(enig->reflector, r, ALPH_LENGTH);
+	const char r[ALPH_LENGTH + 1] = UKW_B;
+	strncpy(enig->reflector, r, ALPH_LENGTH + 1);
 
-	const char r1 [ALPH_LENGTH] = ROTOR_I;
-	const char r2 [ALPH_LENGTH] = ROTOR_II;
-	const char r3 [ALPH_LENGTH] = ROTOR_III;
+	const char r1 [ALPH_LENGTH + 1] = ROTOR_I;
+	const char r2 [ALPH_LENGTH + 1] = ROTOR_II;
+	const char r3 [ALPH_LENGTH + 1] = ROTOR_III;
 	
-	memmove(enig->parts[2].alph, r1, ALPH_LENGTH);
+	strncpy(enig->parts[2].alph, r1, ALPH_LENGTH + 1);
 	enig->parts[2].set = 16;
 	enig->parts[2].turnPoint = TURN_I;
 
-	memmove(enig->parts[1].alph, r2, ALPH_LENGTH);
+	strncpy(enig->parts[1].alph, r2, ALPH_LENGTH + 1);
 	enig->parts[1].set = 21;
 	enig->parts[1].turnPoint = TURN_II;
 
-	memmove(enig->parts[0].alph, r3, ALPH_LENGTH);
+	strncpy(enig->parts[0].alph, r3, ALPH_LENGTH + 1);
 	enig->parts[0].set = 5;
 	enig->parts[0].turnPoint = TURN_III;
 
@@ -139,7 +168,7 @@ int main() {
 	for(int i = PART_COUNT - 1; i >= 0; i--) {
 		printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].set, enig->parts[i].turnPoint );
 	}
-	printf("UKW: %s\nWIRING%s\n", enig->reflector, enig->wiring);
+	printf("UKW: %s\nWIRING: %s\n", enig->reflector, enig->wiring);
 	printf("*******\n");
 
 	char mssg [88] = "El que guarda su boca guarda su alma\nmas el que mucho abre sus labios tendra calamidad.";
@@ -151,7 +180,7 @@ int main() {
 
 	return 0;
 }
-		
+	*/	
 
 
 

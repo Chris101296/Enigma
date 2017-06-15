@@ -8,7 +8,9 @@
 #define ALPH_LENGTH 26	//length of alphabet of each rotor
 #define WORD_COUNT 20		//Number of words plugged by wires 
 							//(number of wires * 2)
+#define WIRE_COUNT 10		//Number of wires
 #define PART_COUNT 3		//Number of rotors
+#define CASE_GAP  32	// Equivilant to 'a' - 'A'
 
 /* Alphabets of respective Rotors */
 #define ROTOR_I    "EKMFLGDQVZNTOWYHXUSPAIBRCJ"
