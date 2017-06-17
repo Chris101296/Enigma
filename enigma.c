@@ -11,6 +11,7 @@
 /*Function for normal stepping on the Enigma Machine*/
 #define STEP(step) ((step + 1) % ALPH_LENGTH ) 
 
+#define DEBUG
 /*Steps through entire machine
 */
 void stepMachine(enigma* enig) {
@@ -42,6 +43,9 @@ char wireSwap(enigma* enig, char c) {
 /** Encrypts a single character using the Enigma machine
 	enig is a pointer to the enigma structure in use**/
 extern char encrypt(enigma* enig, char c) {	
+	#ifdef DEBUG
+		printf("%d ",c);
+	#endif	
 	if(c > 'Z' || c < 'A') {
 		if(c >= 'a' && c <= 'z')
 			return encrypt(enig, c - CASE_GAP);

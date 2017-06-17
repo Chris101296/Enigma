@@ -64,8 +64,5 @@ typedef struct __attribute__((packed)) enigma_t {
 	part parts [PART_COUNT];	//current position of rotor (or 26 for reflector)
 } enigma;
 
-
-#define DEBUG
-
 #endif
 
