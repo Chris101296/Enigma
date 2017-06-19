@@ -16,16 +16,16 @@
 */
 void stepMachine(enigma* enig) {
 
-	bool midTurn = enig->parts[2].set == enig->parts[2].turnPoint;
-	bool rightTurn = enig->parts[1].set == enig->parts[1].turnPoint;
+	bool midTurn = enig->parts[2].pos == enig->parts[2].turnPoint;
+	bool rightTurn = enig->parts[1].pos == enig->parts[1].turnPoint;
 
 	if(rightTurn) 
-		enig->parts[0].set = STEP(enig->parts[0].set);
+		enig->parts[0].pos = STEP(enig->parts[0].pos);
 	
 	if(midTurn || rightTurn)	// Watching for double step as well as normal step
-		enig->parts[1].set = STEP(enig->parts[1].set);	
+		enig->parts[1].pos = STEP(enig->parts[1].pos);	
 	
-	enig->parts[2].set = STEP(enig->parts[2].set);
+	enig->parts[2].pos = STEP(enig->parts[2].pos);
 }
 
 /**Simualtes the portion of encryption conducted by the wire board**/
@@ -43,9 +43,6 @@ char wireSwap(enigma* enig, char c) {
 /** Encrypts a single character using the Enigma machine
 	enig is a pointer to the enigma structure in use**/
 extern char encrypt(enigma* enig, char c) {	
-	#ifdef DEBUG
-		printf("%d ",c);
-	#endif	
 	if(c > 'Z' || c < 'A') {
 		if(c >= 'a' && c <= 'z')
 			return encrypt(enig, c - CASE_GAP);
@@ -55,56 +52,64 @@ extern char encrypt(enigma* enig, char c) {
 	stepMachine(enig);
 
 	#ifdef DEBUG
-		printf("%d|%d|%d\n",enig->parts[0].set, 
-						   enig->parts[1].set, 
-						   enig->parts[2].set);
+		printf("%d|%d|%d\n",enig->parts[0].pos, 
+						   enig->parts[1].pos, 
+						   enig->parts[2].pos);
 	#endif
 
 	//Begin Encryption
 	c = wireSwap(enig, c);
-	
+	#ifdef DEBUG
+		printf("%d ", c - 'A');
+	#endif
 	//Fast Rotor
 	c -= 'A'; 						//Converts char to rotor notation (0 - 25)
-	uint8_t index = (c + enig->parts[2].set) % ALPH_LENGTH; //index of letter to swap
-	c =  enig->parts[2].alph[index] - 'A'; //get final result of swap
+	uint8_t index = (c + enig->parts[2].pos - enig->parts[2].set + ALPH_LENGTH) % ALPH_LENGTH; //index of letter to swap
+	c =  (enig->parts[2].alph[index] - 'A'+ enig->parts[2].set - 
+		enig->parts[2].pos + ALPH_LENGTH) % ALPH_LENGTH; //get final result of swap
 	#ifdef DEBUG
 		printf("%d ", c);
 	#endif
 	
 	//Rest of Rotors
 	for(int i = PART_COUNT - 2; i > -1; i--) {
-		index = (c + enig->parts[i].set - enig->parts[i + 1].set + ALPH_LENGTH) % ALPH_LENGTH;
-		c = enig->parts[i].alph[index] - 'A'; //get final result of swap
+		index = (c + enig->parts[i].pos - enig->parts[i].set + ALPH_LENGTH) % ALPH_LENGTH;
+		c = (enig->parts[i].alph[index] - 'A' + enig->parts[i].set 
+			- enig->parts[i].pos + ALPH_LENGTH) % ALPH_LENGTH;
+ //get final result of swap
 		#ifdef DEBUG
 			printf("%d ", c);
 		#endif
 	}
 	
 	//Reflector Part
-	index = (c - enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH;
+	index = c;
 	c = enig->reflector[index] - 'A';
     #ifdef DEBUG
 		printf("%d ", c);
 	#endif
 	
 	//Reverse
-	c = (c + enig->parts[0].set) % ALPH_LENGTH + 'A';
+	c = (c + enig->parts[0].pos - enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH + 'A';
 	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0].alph;
-    #ifdef DEBUG
+	c = (c - enig->parts[0].pos + enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH;  
+	#ifdef DEBUG
 		printf("%d ", c);
 	#endif
 
 	for(int i = 1; i < PART_COUNT; i++) {
-		c = (c + enig->parts[i].set - enig->parts[i - 1]. set + ALPH_LENGTH) % ALPH_LENGTH;
+		c = (c + enig->parts[i].pos - enig->parts[i].set + 
+				ALPH_LENGTH) % ALPH_LENGTH;
 		c = c + 'A';
 		c = strchr(enig->parts[i].alph, c) - (char*)&enig->parts[i].alph;
-	    #ifdef DEBUG
+		c = (c - enig->parts[i].pos + enig->parts[i].set + ALPH_LENGTH) % ALPH_LENGTH;	    
+		#ifdef DEBUG
 			printf("%d ", c);
 		#endif
 	}	 
 
 	//Ready for Wire Board	
-	c = (c - enig->parts[2].set + ALPH_LENGTH) % ALPH_LENGTH +'A';
+	c = c +'A';
 	c = wireSwap(enig, c);
     #ifdef DEBUG
 		printf("%c\n", c);
@@ -157,20 +162,20 @@ int main() {
 	const char r3 [ALPH_LENGTH + 1] = ROTOR_III;
 	
 	strncpy(enig->parts[2].alph, r1, ALPH_LENGTH + 1);
-	enig->parts[2].set = 16;
+	enig->parts[2].pos = 16;
 	enig->parts[2].turnPoint = TURN_I;
 
 	strncpy(enig->parts[1].alph, r2, ALPH_LENGTH + 1);
-	enig->parts[1].set = 21;
+	enig->parts[1].pos = 21;
 	enig->parts[1].turnPoint = TURN_II;
 
 	strncpy(enig->parts[0].alph, r3, ALPH_LENGTH + 1);
-	enig->parts[0].set = 5;
+	enig->parts[0].pos = 5;
 	enig->parts[0].turnPoint = TURN_III;
 
 	printf("*******\n");
 	for(int i = PART_COUNT - 1; i >= 0; i--) {
-		printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].set, enig->parts[i].turnPoint );
+		printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].pos, enig->parts[i].turnPoint );
 	}
 	printf("UKW: %s\nWIRING: %s\n", enig->reflector, enig->wiring);
 	printf("*******\n");

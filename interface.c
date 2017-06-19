@@ -8,20 +8,7 @@
 #include <assert.h>
 
 #include "enigma.h"
-
-#define CONF "enigma.enig"
-#define MSSG "mssg.txt"
-#define ENCR "encr.txt"
-#define MENU "ABCD"
-#define WR_AND_EN  'A'
-#define EN         'B'
-#define MOD_WIRING 'C'
-#define MOD_ROT    'D'
-
-#define WIRING_ERROR "ERROR\n Type 2 unspaced letters (CU):\nAGAIN "
-#define WIRING_REPEAT "You have already used one of these letters\nAGAIN "
-
-//#define DEBUG_I
+#define DEBUG_I
 
 void loadSettings(enigma* enig);
 void checkOpp(char* ans, char* options);
@@ -31,8 +18,8 @@ void rotors(enigma* enig);
 
 int main() {
 	enigma* enig = malloc(sizeof(enigma));
-	loadSettings(enig);
 	while(1) {
+		loadSettings(enig);
 		printf("----------\n| ENIGMA |\n----------\n\n");
 		printf("%-5c%s\n%-5c%s\n%-5c%s\n%-5c%s\n\nChoose one: ",
 			WR_AND_EN, "WRITE AND ENCRYPT", 
@@ -65,24 +52,24 @@ void loadSettings(enigma* enig) {
 	//Creates default file if it does not exist	
 	if(access("enigma.enig", F_OK) == -1) {
 		FILE *conf = fopen(CONF, "w");	
-		fprintf(conf, "%s\n%s\n%d\n%d\n%s\n%d\n%d\n%s\n%d\n%d\n%s\n",
+		fprintf(conf, "%s\n%s\n%d\n%d\n%d\n%s\n%d\n%d\n%d\n%s\n%d\n%d\n%d\n%s\n",
 			    "QWERTYUIOPASDFGHJKLZ", UKW_B,
-				5, 21, ROTOR_III, 21, 4, ROTOR_II, 16, 16, ROTOR_I);
+				5, 0, TURN_III, ROTOR_III, 21, 0, TURN_II, ROTOR_II, 16, 0, TURN_I, ROTOR_I);
 		fclose(conf);	
 	}	
 	
 	FILE *conf = fopen(CONF, "r");
-		fscanf(conf, "%s %s %hhu %hhu %s %hhu %hhu %s %hhu %hhu %s", 
+		fscanf(conf, "%s %s %hhu %hhu %hhu %s %hhu %hhu %hhu %s %hhu %hhu %hhu %s", 
 			&enig->wiring[0], 
 			&enig->reflector[0],
-			&enig->parts[0].set, &enig->parts[0].turnPoint,&enig->parts[0].alph[0],	
-			&enig->parts[1].set, &enig->parts[1].turnPoint,&enig->parts[1].alph[0],
-			&enig->parts[2].set, &enig->parts[2].turnPoint,&enig->parts[2].alph[0]);	
+			&enig->parts[0].pos, &enig->parts[0].set, &enig->parts[0].turnPoint,&enig->parts[0].alph[0],	
+			&enig->parts[1].pos, &enig->parts[1].set, &enig->parts[1].turnPoint,&enig->parts[1].alph[0],
+			&enig->parts[2].pos, &enig->parts[2].set, &enig->parts[2].turnPoint,&enig->parts[2].alph[0]);	
 	fclose(conf);
 	#ifdef DEBUG_I
 		printf("*******\n");
 		for(int i = 0; i < 3; i++) {
-			printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].set, enig->parts[i].turnPoint );
+			printf("ROTOR %d: |%s| %d SET: %d\n", i, enig->parts[i].alph, enig->parts[i].pos, enig->parts[i].set );
 		}
 		printf("UKW: %s\nWIRING: %s\n", enig->reflector, enig->wiring);
 		printf("*******\n");
@@ -141,7 +128,7 @@ void wiring(enigma* enig) {
 		if( in[2] != '\n' || in[0] == in[1] || 
 			in[0] < 'A' || in[0] > 'Z' || in[1] < 'A' || in[1] > 'Z' ) {
 			
-			while(in[2] != '\n' || in[2] != '\0') in[2] = fgetc(stdin);
+			while(in[2] != '\n' && in[1] != '\n' && in[0] != '\n') in[2] = fgetc(stdin);
 			printf(WIRING_ERROR);
 			i-=2;
 		}
@@ -172,13 +159,13 @@ void rotors(enigma* enig) {
 	fscanf(conf, "%s %s", trash, trash);
 	free(trash);
 	printf("CHANGING ROTOR SETTINGS:\n");
-	printf("Type the Roman Numeral of the rotor you choose\n");
-	printf("and the startting position (Letter) you wish for each rotor\n");
+	printf("Type the Roman Numeral of the rotor you choose,\n");
+	printf("the startting position (Letter) you wish for each rotor,\n");
+	printf("and the ring setting (Letter) you wish for each rotor\n");
 	const char pos [3][7] = {"SLOW", "MIDDLE","FAST"};
 	char in[5];
-	char set[3];
 	for(uint8_t i = 0; i < PART_COUNT; i++) {
-			printf("\n%s ROTOR: ", pos[i]);
+			printf("\n%s ROTOR: ", pos[i]); //Choose a rotor to use
 			fgets(in, sizeof(in), stdin);
 			if(in[0] > 'Z')
 				in[0] -= CASE_GAP;
@@ -212,33 +199,57 @@ void rotors(enigma* enig) {
 			}
 			chooseRotor(enig, in, i);
 
-			printf("POSITION OF ROTOR: ");
-			fgets(set, sizeof(set), stdin);
+			printf("ROTOR POSITION: ");	//Choose rotor's position
+			fgets(in, CHAR_IN, stdin);
 			//Catch capitalization issues		
-			if(set[0] > 'Z') set[0] -= CASE_GAP;
+			if(in[0] > 'Z') in[0] -= CASE_GAP;
 			
-			while((set[1] != '\n')
-					 || set[0] < 'A' || set[0] > 'Z') {
+			while((in[1] != '\n')
+					 || in[0] < 'A' || in[0] > 'Z') {
 				#ifdef DEBUG_I
-						printf("\nCHARS: %d %d\n", set[0],
-						set[1]);
-						printf("%d %d %d\n", set[1]!='\n',set[0]<'A',set[0]>'Z');
+						printf("\nCHARS: %d %d\n", in[0],
+						in[1]);
+						printf("%d %d %d\n", in[1]!='\n',in[0]<'A',in[0]>'Z');
 				#endif				
-				while(set[1]!='\n' && set[0]!='\n') set[1] = fgetc(stdin);
+				while(in[1]!='\n' && in[0]!='\n') in[1] = fgetc(stdin);
 				printf("ERROR:\nType a SINGLE LETTER\n");
 				printf("AGAIN %s ROTOR: ", pos[i]);
-				fgets(set, sizeof(set), stdin);
-				if(set[0] > 'Z') set[0] -= CASE_GAP;
+				fgets(in, CHAR_IN, stdin);
+				if(in[0] > 'Z') in[0] -= CASE_GAP;
 			}
-			enig->parts[i].set = set[0] - 'A';
-			fprintf(conf, "\n%hhu\n%hhu\n%s", enig->parts[i].set, 
-					enig->parts[i].turnPoint, enig->parts[i].alph);
+			enig->parts[i].pos = in[0] - 'A';
+
+			printf("RING SETTING: ");	//Choose a ring setting
+			fgets(in, CHAR_IN, stdin);
+			//Catch capitalization issues		
+			if(in[0] > 'Z') in[0] -= CASE_GAP;
+			
+			while((in[1] != '\n')
+					 || in[0] < 'A' || in[0] > 'Z') {
+				#ifdef DEBUG_I
+						printf("\nCHARS: %d %d\n", in[0],
+						in[1]);
+						printf("%d %d %d\n", in[1]!='\n',in[0]<'A',in[0]>'Z');
+				#endif				
+				while(in[1]!='\n' && in[0]!='\n') in[1] = fgetc(stdin);
+				printf("ERROR:\nType a SINGLE LETTER\n");
+				printf("AGAIN %s ROTOR: ", pos[i]);
+				fgets(in, CHAR_IN, stdin);
+				if(in[0] > 'Z') in[0] -= CASE_GAP;
+			}
+			enig->parts[i].set = in[0] - 'A';
+			
+			fprintf(conf, "\n%hhu\n%hhu\n%hhu\n%s", enig->parts[i].pos, 
+					enig->parts[i].set, enig->parts[i].turnPoint, 
+					enig->parts[i].alph);
 	}
 	fclose(conf);
 	#ifdef DEBUG_I
 		printf("*******\n");
 		for(int i = PART_COUNT - 1; i >= 0; i--) {
-			printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].set, enig->parts[i].turnPoint );
+			printf("ROTOR %d: |%s| POS: %d SET: %d TURN: %d\n", i, 
+			enig->parts[i].alph, enig->parts[i].pos, enig->parts[i].set, 
+			enig->parts[i].turnPoint );
 		}
 		printf("UKW: %s\nWIRING: %s\n", enig->reflector, enig->wiring);
 		printf("*******\n");

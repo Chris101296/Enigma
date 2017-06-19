@@ -33,12 +33,13 @@
 #define UKW_C     "FVPJIAOYEDRZXWGCTKUQSBNMHL"
 
 /* Struct for both the rotors and reflector of an Enigma machine.
-   Contains set, a number from 0 to 25 representing the current position of 
+   Contains pos, a number from 0 to 25 representing the current position of 
    the rotor as well as letter, the "alphabet" used by this piece. 
    The reflector will be assigned
 */   
 typedef struct __attribute__((packed)) part_t {
-	uint8_t set;	//current position of rotor (or 26 for reflector)
+	uint8_t pos;	//current position of rotor (or 26 for reflector)
+	uint8_t set;	//setting of rotor
 	uint8_t turnPoint;	//Point at which the rotor turns the left rotor
 						//Unused by Slow Rotor and Reflector
 						//Should match alph used
@@ -47,10 +48,9 @@ typedef struct __attribute__((packed)) part_t {
 
 /*	Struct for the circuit, main component, of the Enigma Machine.
 	Contains a 4 element array of parts with the follwing defintions
-	[3] Fast Rotor
-	[2] Middle Rotor (Can Double step)
-	[1] Slow Rotor
-	[0] Reflector set is 26 for sanity check
+	[2] Fast Rotor
+	[1] Middle Rotor (Can Double step)
+	[0] Slow Rotor
 
 	wiring represents the wire board of the machine with each
 	evenly indexed char being connected to the oddly indexed 
