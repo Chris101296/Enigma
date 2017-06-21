@@ -78,7 +78,7 @@ extern char encrypt(enigma* enig, char c) {
 			- enig->parts[i].pos + ALPH_LENGTH) % ALPH_LENGTH;
  //get final result of swap
 		#ifdef DEBUG
-			printf("%d ", c);
+			printf("%d|%d ", index, c);
 		#endif
 	}
 	
