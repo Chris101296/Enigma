@@ -27,5 +27,6 @@
 //Functions defined in enigma.c
 extern char encrypt(enigma *enig, char c); 
 extern void chooseRotor(enigma* enig, char* rotor, uint8_t sec);
+extern void printSettings(enigma* enig);
 #endif
 

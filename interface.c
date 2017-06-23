@@ -22,6 +22,7 @@ int main() {
 	while(1) {
 		//Title asking user to pick an option
 		printf("------------\n| ENIGMA I |\n------------\n\n");
+		printSettings(enig);
 		printf("%-5c%s\n%-5c%s\n%-5c%s\n%-5c%s\n\nChoose one: ",
 			WR_AND_EN, "WRITE AND ENCRYPT", 
 			EN, "ENCRYPT PREXISTING MESSAGE", MOD_WIRING, "MODIFY WIRING", 
@@ -42,7 +43,7 @@ int main() {
 		}
 		
 		//Ask user whether to stop
-		printf("Continue?\n[Y]%10s\n[N]%10s\n", "YES", "NO");
+		printf("\nContinue?\n[Y]%10s\n[N]%10s\n", "YES", "NO");
 		fgets(ans, sizeof(ans), stdin);
 		checkOpp(ans, "YN");
 		if(ans[0] == 'N') break;

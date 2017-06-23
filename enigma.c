@@ -17,7 +17,7 @@
 void stepMachine(enigma* enig) {
 	//booleans deciding whether middle and left rotors turn.
 	bool midTurn = enig->parts[2].pos == enig->parts[2].turnPoint;
-	bool lefttTurn = enig->parts[1].pos == enig->parts[1].turnPoint;
+	bool leftTurn = enig->parts[1].pos == enig->parts[1].turnPoint;
 
 	if(leftTurn) 
 		enig->parts[0].pos = STEP(enig->parts[0].pos);
@@ -154,4 +154,35 @@ extern void chooseRotor(enigma* enig, char* rotor, uint8_t sec) {
 		strncpy(enig->parts[sec].alph, ROTOR_V, ALPH_LENGTH + 1);
 		enig->parts[sec].turnPoint = TURN_V;	
 	}
+}
+/** Returns appropriate string for given turn point 
+    Helpper function for printSettings. Assumes turn is one
+    of the 5 constants in the if statements below**/
+char* rotSymb(uint8_t turn) {
+	if(turn == TURN_I)
+		return "I";
+	if(turn == TURN_II)
+		return "II";
+	if(turn == TURN_III)
+		return "III";
+	if(turn == TURN_IV)
+		return "IV";
+	else  			//(turn == TURN_V)
+		return "V";
+}
+
+/** Prints settings of Enigma Machine**/
+extern void printSettings(enigma* enig) {
+	printf("WIRING: ");
+	for(int i = 0; i < WORD_COUNT; i+=2)
+		printf("%c-%c ", enig->wiring[i], enig->wiring[i+1]);
+	printf("\nREFLECTOR = UKW-B\n");
+	const char rots[3][7] = {"SLOW", "MIDDLE", "FAST"};
+	for(int i = 0; i < PART_COUNT; i++) {
+		printf("\n%s ROTOR:\nROTOR: %-4s  SETTING: %c  "
+		"START POSITION: %c\n", rots[i], 
+		rotSymb(enig->parts[i].turnPoint), 
+		enig->parts[i].set + 'A', enig->parts[i].pos + 'A');	
+	}
+	printf("\n");
 }
