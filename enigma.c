@@ -10,25 +10,27 @@
 
 /*Function for normal stepping on the Enigma Machine*/
 #define STEP(step) ((step + 1) % ALPH_LENGTH ) 
+//#define DEBUG
 
-#define DEBUG
-/*Steps through entire machine
+/*Steps through entire machine, called before encrypting letter
 */
 void stepMachine(enigma* enig) {
-
+	//booleans deciding whether middle and left rotors turn.
 	bool midTurn = enig->parts[2].pos == enig->parts[2].turnPoint;
-	bool rightTurn = enig->parts[1].pos == enig->parts[1].turnPoint;
+	bool lefttTurn = enig->parts[1].pos == enig->parts[1].turnPoint;
 
-	if(rightTurn) 
+	if(leftTurn) 
 		enig->parts[0].pos = STEP(enig->parts[0].pos);
 	
-	if(midTurn || rightTurn)	// Watching for double step as well as normal step
+	if(midTurn || leftTurn)	// Takes into account double-stepping
 		enig->parts[1].pos = STEP(enig->parts[1].pos);	
 	
 	enig->parts[2].pos = STEP(enig->parts[2].pos);
 }
 
-/**Simualtes the portion of encryption conducted by the wire board**/
+/**Simualtes the portion of encryption conducted by the wire board
+   Looks for letter in enig->wiring and if found, returns the letter
+   paired to the input **/
 char wireSwap(enigma* enig, char c) {
 	for(int i = 0; i < WORD_COUNT; i++) {
 		if(c == enig->wiring[i]) {
@@ -62,21 +64,26 @@ extern char encrypt(enigma* enig, char c) {
 	#ifdef DEBUG
 		printf("%d ", c - 'A');
 	#endif
+	
 	//Fast Rotor
 	c -= 'A'; 						//Converts char to rotor notation (0 - 25)
-	uint8_t index = (c + enig->parts[2].pos - enig->parts[2].set + ALPH_LENGTH) % ALPH_LENGTH; //index of letter to swap
-	c =  (enig->parts[2].alph[index] - 'A'+ enig->parts[2].set - 
-		enig->parts[2].pos + ALPH_LENGTH) % ALPH_LENGTH; //get final result of swap
+	uint8_t index = (c + enig->parts[2].pos - 
+			enig->parts[2].set + ALPH_LENGTH) % ALPH_LENGTH; //index of letter to swap
+	
+	c =  (enig->parts[2].alph[index] - 'A'+ 
+		enig->parts[2].set - enig->parts[2].pos + 
+		ALPH_LENGTH) % ALPH_LENGTH; //get final result of swap
+	
 	#ifdef DEBUG
 		printf("%d ", c);
 	#endif
 	
 	//Rest of Rotors
 	for(int i = PART_COUNT - 2; i > -1; i--) {
-		index = (c + enig->parts[i].pos - enig->parts[i].set + ALPH_LENGTH) % ALPH_LENGTH;
+		index = (c + enig->parts[i].pos - enig->parts[i].set 
+			+ ALPH_LENGTH) % ALPH_LENGTH;
 		c = (enig->parts[i].alph[index] - 'A' + enig->parts[i].set 
 			- enig->parts[i].pos + ALPH_LENGTH) % ALPH_LENGTH;
- //get final result of swap
 		#ifdef DEBUG
 			printf("%d|%d ", index, c);
 		#endif
@@ -90,8 +97,9 @@ extern char encrypt(enigma* enig, char c) {
 	#endif
 	
 	//Reverse
-	c = (c + enig->parts[0].pos - enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH + 'A';
-	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0].alph;
+	c = (c + enig->parts[0].pos - enig->parts[0].set 
+		+ ALPH_LENGTH) % ALPH_LENGTH + 'A';
+	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0].alph; //Index of calculated letter
 	c = (c - enig->parts[0].pos + enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH;  
 	#ifdef DEBUG
 		printf("%d ", c);
@@ -102,7 +110,8 @@ extern char encrypt(enigma* enig, char c) {
 				ALPH_LENGTH) % ALPH_LENGTH;
 		c = c + 'A';
 		c = strchr(enig->parts[i].alph, c) - (char*)&enig->parts[i].alph;
-		c = (c - enig->parts[i].pos + enig->parts[i].set + ALPH_LENGTH) % ALPH_LENGTH;	    
+		c = (c - enig->parts[i].pos + enig->parts[i].set 
+			+ ALPH_LENGTH) % ALPH_LENGTH;	    
 		#ifdef DEBUG
 			printf("%d ", c);
 		#endif
@@ -117,7 +126,9 @@ extern char encrypt(enigma* enig, char c) {
 	return c;
 }
 
-//Given, string rotor is one of the 5 rotors, sec is between 0 and 2 incluseve
+/*Given, string rotor is one of the 5 rotors, sec is between 0 and 2 
+  incluseve, this function takes rotor and returns the corresponding 
+  alphabet*/
 extern void chooseRotor(enigma* enig, char* rotor, uint8_t sec) {
 	if(strcmp(rotor, "I\n") == 0) {
 		strncpy(enig->parts[sec].alph, ROTOR_I, ALPH_LENGTH + 1);
@@ -144,54 +155,3 @@ extern void chooseRotor(enigma* enig, char* rotor, uint8_t sec) {
 		enig->parts[sec].turnPoint = TURN_V;	
 	}
 }
-
-
-//TEST
-/*
-int main() {
-	printf("%d %d\n", sizeof(char), sizeof(uint8_t) );
-	enigma* enig = malloc(sizeof(enigma));
-	const char wires[ALPH_LENGTH + 1]= "AAAAAAAAAAAAAAAAAAAA";
-	strncpy(enig->wiring, wires, ALPH_LENGTH + 1); 
-	
-	const char r[ALPH_LENGTH + 1] = UKW_B;
-	strncpy(enig->reflector, r, ALPH_LENGTH + 1);
-
-	const char r1 [ALPH_LENGTH + 1] = ROTOR_I;
-	const char r2 [ALPH_LENGTH + 1] = ROTOR_II;
-	const char r3 [ALPH_LENGTH + 1] = ROTOR_III;
-	
-	strncpy(enig->parts[2].alph, r1, ALPH_LENGTH + 1);
-	enig->parts[2].pos = 16;
-	enig->parts[2].turnPoint = TURN_I;
-
-	strncpy(enig->parts[1].alph, r2, ALPH_LENGTH + 1);
-	enig->parts[1].pos = 21;
-	enig->parts[1].turnPoint = TURN_II;
-
-	strncpy(enig->parts[0].alph, r3, ALPH_LENGTH + 1);
-	enig->parts[0].pos = 5;
-	enig->parts[0].turnPoint = TURN_III;
-
-	printf("*******\n");
-	for(int i = PART_COUNT - 1; i >= 0; i--) {
-		printf("ROTOR %d: |%s| %d TURN: %d\n", i, enig->parts[i].alph, enig->parts[i].pos, enig->parts[i].turnPoint );
-	}
-	printf("UKW: %s\nWIRING: %s\n", enig->reflector, enig->wiring);
-	printf("*******\n");
-
-	char mssg [88] = "El que guarda su boca guarda su alma\nmas el que mucho abre sus labios tendra calamidad.";
-	for(int i = 0; i < 87; i++) {
-		mssg[i] = encrypt(enig, mssg[i]);
-	}
-	
-	printf("%s\n", mssg);
-
-	return 0;
-}
-	*/	
-
-
-
-
-

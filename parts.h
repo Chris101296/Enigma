@@ -1,6 +1,6 @@
 /* Defines constants of the rotors and refletor of the Enigma Machine.
 
- * DD/MM/YYYY
+ * 21/06/2017
 */
 #ifndef ENIGMA_PARTS
 #define ENIGMA_PARTS
@@ -29,8 +29,8 @@
 /*Reflector Alphabets*/
 #define UKW_B     "YRUHQSLDPXNGOKMIEBFZCWVJAT"
 //Following Not used in WWII too much
-#define UKW_A     "EJMZALYXVBWFCRQUONTSPIKHGD"
-#define UKW_C     "FVPJIAOYEDRZXWGCTKUQSBNMHL"
+//#define UKW_A     "EJMZALYXVBWFCRQUONTSPIKHGD"
+//#define UKW_C     "FVPJIAOYEDRZXWGCTKUQSBNMHL"
 
 /* Struct for both the rotors and reflector of an Enigma machine.
    Contains pos, a number from 0 to 25 representing the current position of 
