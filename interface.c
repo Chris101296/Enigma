@@ -157,7 +157,7 @@ void wiring(enigma* enig) {
 			}
 		}
 	}
-	enig->wiring[21] = '\0';
+	enig->wiring[20] = '\0';
 	#ifdef DEBUG_I
 			printf("\nWIRING: %s\n", enig->wiring);
 	#endif
@@ -297,7 +297,7 @@ void encrMssg(char ans, enigma* enig) {
 			printf("B4\n%s\n", c);
 		#endif		
 		for(int i = 0; i < 100 && c[i] != '\0'; i++)
-			c[i] = encrypt(enig, c[i]);//encrypt each character	 	
+			c[i] = encrChar(enig, c[i]);//encrypt each character
 		
 		//print c string onto ENCR and screen
 		fputs(c, encr);

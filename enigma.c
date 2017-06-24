@@ -44,10 +44,10 @@ char wireSwap(enigma* enig, char c) {
 
 /** Encrypts a single character using the Enigma machine
 	enig is a pointer to the enigma structure in use**/
-extern char encrypt(enigma* enig, char c) {	
+extern char encrChar(enigma* enig, char c) {
 	if(c > 'Z' || c < 'A') {
 		if(c >= 'a' && c <= 'z')
-			return encrypt(enig, c - CASE_GAP);
+			return encrChar(enig, c - CASE_GAP);
 		else
 			return c;
 	}
@@ -99,8 +99,9 @@ extern char encrypt(enigma* enig, char c) {
 	//Reverse
 	c = (c + enig->parts[0].pos - enig->parts[0].set 
 		+ ALPH_LENGTH) % ALPH_LENGTH + 'A';
-	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0].alph; //Index of calculated letter
-	c = (c - enig->parts[0].pos + enig->parts[0].set + ALPH_LENGTH) % ALPH_LENGTH;  
+	//Index of calculated letter
+	c = strchr(enig->parts[0].alph, c) - (char*)&enig->parts[0].alph;
+	c = (c - enig->parts[0].pos + enig->parts[0].set + ALPH_LENGTH)%ALPH_LENGTH;
 	#ifdef DEBUG
 		printf("%d ", c);
 	#endif
