@@ -11,28 +11,33 @@
 //#define DEBUG_I
 
 void loadSettings(enigma* enig);
-void checkOpp(char* ans, char* options);
+void checkOpp(char* ans, int inSize, char* options);
 void encrMssg(char ans, enigma* enig);
 void wiring(enigma* enig);
 void rotors(enigma* enig);
+void clear();
 
 int main() {
 	enigma* enig = malloc(sizeof(enigma)); //Create space for enigma data
-	loadSettings(enig);
 	while(1) {
+		loadSettings(enig);
+		clear();
 		//Title asking user to pick an option
 		printf("------------\n| ENIGMA I |\n------------\n\n");
 		printSettings(enig);
-		printf("%-5c%s\n%-5c%s\n%-5c%s\n%-5c%s\n\nChoose one: ",
+		printf("%-5c%s\n%-5c%s\n%-5c%s\n%-5c%s\n%-5c%s\n\nChoose one: ",
 			WR_AND_EN, "WRITE AND ENCRYPT", 
 			EN, "ENCRYPT PREXISTING MESSAGE", MOD_WIRING, "MODIFY WIRING", 
-			MOD_ROT, "MODIFY ROTORS");
+			MOD_ROT, "MODIFY ROTORS", QUIT, "END SESSION");
 		
 		char ans[3]; 
 		fgets(ans, sizeof(ans), stdin);
-		checkOpp(ans, MENU);
-	
+		checkOpp(ans, sizeof(ans), MENU);
+		
+		clear();
 		//Executes user's choice
+		if(ans[0] == QUIT)//E
+			break;
 		if(ans[0] == MOD_ROT) //D
 			rotors(enig);
 		else if(ans[0] == MOD_WIRING) //C
@@ -45,11 +50,16 @@ int main() {
 		//Ask user whether to stop
 		printf("\nContinue?\n[Y]%10s\n[N]%10s\n", "YES", "NO");
 		fgets(ans, sizeof(ans), stdin);
-		checkOpp(ans, "YN");
+		checkOpp(ans, sizeof(ans), "YN");
 		if(ans[0] == 'N') break;
 	}
 	free(enig); //free maloced space
 	return 0;
+}
+
+/** Clears Screen **/
+void clear() {
+	system("clear && printf '\\e[3J'");
 }
 
 /** *Obtains the settings from EXISTING, PROPPERLY FORMATTED
@@ -83,7 +93,7 @@ void loadSettings(enigma* enig) {
 /** Takes a single character address (ans) and makes sure that it is in the 
     string options. If it isn't. the user will be notified until he changes 
     ans to a character in options **/
-void checkOpp(char* ans, char* options) {
+void checkOpp(char* ans, int inSize, char* options) {
 	bool badOpp = 1;
 	if(ans[0] > 'Z') ans[0] -= CASE_GAP; //Make uppercase
 	for(int i = 0; i < strlen(options); i++) {
@@ -101,7 +111,7 @@ void checkOpp(char* ans, char* options) {
 			#endif
 		}
 		printf("\nERROR: Type ONE of the letters above\n");
-		fgets(ans, sizeof(ans), stdin); //Take new input
+		fgets(ans, inSize, stdin); //Take new input
 		#ifdef DEBUG_I
 			printf("1%c 2%c 3%c  %d\n", ans[0], ans[1], ans[2], (int)badOpp);
 		#endif
@@ -116,7 +126,7 @@ void checkOpp(char* ans, char* options) {
 	}
 }
 
-/** Allows user to change the wiring of the Enigma Machine**/
+/** Allows user to change the wiring of the Enigma Machine **/
 void wiring(enigma* enig) {
 	char in[4]; //Takes in two letters
 	printf("\nCHANGING WIRE SETTINGS:\n");
@@ -171,11 +181,16 @@ void wiring(enigma* enig) {
 /**	Makes changes to the rotors of the enigma machine, storeing changes in CONF 
 	Changes all rotors, their alphabets, settings, and starts positions**/
 void rotors(enigma* enig) {
-	FILE *conf = fopen(CONF, "r+");
+	FILE *conf = fopen(CONF, "r");
 	//Move straight to the rotor portion of CONF
-	char *trash = malloc(28*sizeof(char));
-	fscanf(conf, "%s %s", trash, trash);
-	free(trash);
+	char *l1 = malloc(28*sizeof(char));
+	char *l2 = malloc(28*sizeof(char));
+	fscanf(conf, "%s %s", l1, l2);
+	fclose(conf);
+	conf = fopen(CONF, "w");
+	fprintf(conf, "%s\n%s", l1, l2);
+	free(l1);
+	free(l2);
 
 	printf("CHANGING ROTOR SETTINGS:\n");
 	printf("Type the Roman Numeral of the rotor you choose,\n");
@@ -188,12 +203,9 @@ void rotors(enigma* enig) {
 			printf("\n%s ROTOR: ", pos[i]); //Choose a rotor to use
 			fgets(in, sizeof(in), stdin);
 			//Capitalize input if need be
-			if(in[0] > 'Z')
-				in[0] -= CASE_GAP;
-			if(in[1] > 'Z')
-				in[1] -= CASE_GAP;
-			if(in[2] > 'Z')
-				in[2] -= CASE_GAP;
+			for(int j = 0; j < (sizeof(in)+1)/2; j++)
+				if(in[j] > 'Z') in[j] -= CASE_GAP;
+
 			//Check if input == Roman numeral from I to V inclusive
 			while((in[0]!='I' && (in[0]!='V' || in[1]!='\n')) ||  
 				 (in[0]=='I' && in[1]!= '\n' && 
@@ -213,12 +225,8 @@ void rotors(enigma* enig) {
 				printf("ERROR:\nType a ROMAN NUMERAL I - V\n");
 				printf("AGAIN %s ROTOR: ", pos[i]);
 				fgets(in, sizeof(in), stdin);
-				if(in[0] > 'Z')
-					in[0] -= CASE_GAP;
-				if(in[1] > 'Z')
-					in[1] -= CASE_GAP;
-				if(in[2] > 'Z')
-					in[2] -= CASE_GAP;
+				for(int j = 0; j < (sizeof(in)+1)/2; j++)
+					if(in[j] > 'Z') in[j] -= CASE_GAP;
 			}
 			chooseRotor(enig, in, i); // sets current rotor with propper alph
 
@@ -235,7 +243,7 @@ void rotors(enigma* enig) {
 				#endif				
 				while(in[1]!='\n' && in[0]!='\n') in[1] = fgetc(stdin);
 				printf("ERROR:\nType a SINGLE LETTER\n");
-				printf("AGAIN %s ROTOR: ", pos[i]);
+				printf("AGAIN, %s ROTOR'S POSITION: ", pos[i]);
 				fgets(in, CHAR_IN, stdin);
 				if(in[0] > 'Z') in[0] -= CASE_GAP;
 			}
@@ -256,7 +264,7 @@ void rotors(enigma* enig) {
 				#endif				
 				while(in[1]!='\n' && in[0]!='\n') in[1] = fgetc(stdin);
 				printf("ERROR:\nType a SINGLE LETTER\n");
-				printf("AGAIN %s ROTOR: ", pos[i]);
+				printf("AGAIN, %s ROTOR'S RING SETTING: ", pos[i]);
 				fgets(in, CHAR_IN, stdin);
 				if(in[0] > 'Z') in[0] -= CASE_GAP;
 			}
@@ -266,6 +274,8 @@ void rotors(enigma* enig) {
 			fprintf(conf, "\n%hhu\n%hhu\n%hhu\n%s", enig->parts[i].pos, 
 					enig->parts[i].set, enig->parts[i].turnPoint, 
 					enig->parts[i].alph);
+			
+			clear();
 	}
 	fclose(conf);
 	#ifdef DEBUG_I
@@ -285,9 +295,9 @@ void rotors(enigma* enig) {
 	otherwise, ans is supposed to be'B' **/
 void encrMssg(char ans, enigma* enig) {
 	if(ans == 'A' || access(MSSG, F_OK) == -1) { //Write mssg.txt
-		system("echo 'TYPE YOUR MESSAGE IN THIS FILE' > mssg.txt");	//MSSG
-		system("nano mssg.txt");	//MSSG
+		system("echo 'TYPE MESSAGE IN THIS FILE' > mssg.txt && nano mssg.txt");
 	}
+
 	FILE *mssg = fopen(MSSG, "r");
 	FILE *encr = fopen(ENCR, "w");
 	char c[100]; //read 100 characters or whole line at a time

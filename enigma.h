@@ -14,11 +14,12 @@
 #define CONF "enigma.enig"	//File for Enigma Configuration
 #define MSSG "mssg.txt"		//File ofor input
 #define ENCR "encr.txt"		//File to store output
-#define MENU "ABCD"			//Options for start menu
+#define MENU "ABCDE"		//Options for start menu
 #define WR_AND_EN  'A'		//Writing new message
 #define EN         'B'		//Encrypting old message
 #define MOD_WIRING 'C'		//Change Wiring setting
 #define MOD_ROT    'D'		//Change rotor settigns and positions
+#define QUIT       'E'		//End session
 
 #define WIRING_ERROR "ERROR\n Type 2 unspaced letters (CU):\nAGAIN "
 #define WIRING_REPEAT "You have already used one of these letters\nAGAIN "
