@@ -8,8 +8,7 @@
 #include <assert.h>
 
 #include "enigma.h"
-//#define DEBUG_I
-
+//#define DEBUG
 void loadSettings(enigma* enig);
 void checkOpp(char* ans, int inSize, char* options);
 void encrMssg(char ans, enigma* enig);
@@ -106,13 +105,13 @@ void checkOpp(char* ans, int inSize, char* options) {
 	while(badOpp || ans[1] != '\n') {
 		while(ans[1] != '\n'){ //Clear stdin buffer
 			ans[1] = fgetc(stdin);
-			#ifdef DEBUG_I
+			#ifdef DEBUG
 				printf("buffer: %c\n", ans[1]);
 			#endif
 		}
 		printf("\nERROR: Type ONE of the letters above\n");
 		fgets(ans, inSize, stdin); //Take new input
-		#ifdef DEBUG_I
+		#ifdef DEBUG
 			printf("1%c 2%c 3%c  %d\n", ans[0], ans[1], ans[2], (int)badOpp);
 		#endif
 		if(ans[0] > 'Z') ans[0] -= CASE_GAP;
@@ -141,7 +140,7 @@ void wiring(enigma* enig) {
 			in[0] -= CASE_GAP;
 		if(in[1] > 'Z')
 			in[1] -= CASE_GAP;
-		#ifdef DEBUG_I
+		#ifdef DEBUG
 			printf("%d 0%c 1%c 2%c 3%c\n",sizeof(in), in[0], in[1], 
 				in[2], in[3]);
 		#endif
@@ -168,7 +167,7 @@ void wiring(enigma* enig) {
 		}
 	}
 	enig->wiring[20] = '\0';
-	#ifdef DEBUG_I
+	#ifdef DEBUG
 			printf("\nWIRING: %s\n", enig->wiring);
 	#endif
 	
@@ -212,7 +211,7 @@ void rotors(enigma* enig) {
 				( (in[1]!='I' && (in[1]!='V' || in[2]!='\n')) || 
 				(in[1]=='I' && in[2]!='\n' && (in[2]!='I' || in[3]!='\n'))) )){
 				
-				#ifdef DEBUG_I
+				#ifdef DEBUG
 						printf("\nCHARS: %d %d %d %d %d\n", in[0],
 						in[1], in[2], in[3], in[4]);
 				#endif	
@@ -236,7 +235,7 @@ void rotors(enigma* enig) {
 			if(in[0] > 'Z') in[0] -= CASE_GAP;
 			
 			while((in[1] != '\n') || in[0] < 'A' || in[0] > 'Z') {
-				#ifdef DEBUG_I
+				#ifdef DEBUG
 						printf("\nCHARS: %d %d\n", in[0],
 						in[1]);
 						printf("%d %d %d\n", in[1]!='\n',in[0]<'A',in[0]>'Z');
@@ -257,7 +256,7 @@ void rotors(enigma* enig) {
 			
 			while((in[1] != '\n')
 					 || in[0] < 'A' || in[0] > 'Z') {
-				#ifdef DEBUG_I
+				#ifdef DEBUG
 						printf("\nCHARS: %d %d\n", in[0],
 						in[1]);
 						printf("%d %d %d\n", in[1]!='\n',in[0]<'A',in[0]>'Z');
@@ -278,7 +277,7 @@ void rotors(enigma* enig) {
 			clear();
 	}
 	fclose(conf);
-	#ifdef DEBUG_I
+	#ifdef DEBUG
 		printf("*******\n");
 		for(int i = PART_COUNT - 1; i >= 0; i--) {
 			printf("ROTOR %d: |%s| POS: %d SET: %d TURN: %d\n", i, 
@@ -297,19 +296,19 @@ void encrMssg(char ans, enigma* enig) {
 	if(ans == 'A' || access(MSSG, F_OK) == -1) { //Write mssg.txt
 		system("echo 'TYPE MESSAGE IN THIS FILE' > mssg.txt && nano mssg.txt");
 	}
-
+	printf("*****************\nENCRYPTED MESSAGE\n*****************\n");
+	
 	FILE *mssg = fopen(MSSG, "r");
 	FILE *encr = fopen(ENCR, "w");
 	char c[100]; //read 100 characters or whole line at a time
 	char*stat = fgets(c, sizeof(c), mssg); //NULL if reads nothing
 	while(*c != '\0' && stat != NULL) { 
-		#ifdef DEBUG_I
+		#ifdef DEBUG
 			printf("B4\n%s\n", c);
 		#endif		
 		for(int i = 0; i < 100 && c[i] != '\0'; i++)
 			c[i] = encrChar(enig, c[i]);//encrypt each character
 		
-		//print c string onto ENCR and screen
 		fputs(c, encr);
 		printf("%s\n", c);
 		stat = fgets(c, sizeof(c), mssg); //get next set of chars
